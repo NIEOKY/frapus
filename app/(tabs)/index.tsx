@@ -2,7 +2,7 @@ import { StyleSheet, Image, TouchableOpacity, Button } from 'react-native';
 import EditScreenInfo from '@/components/EditScreenInfo';
 import { Text, View } from '@/components/Themed';
 import { useState } from 'react';
-import Cuenta from '../cuenta';
+import CuentaScreen from '../cuentaScreen';
 import { Link, router } from 'expo-router';
 import { ScrollView } from 'react-native-gesture-handler';
 import Icon from 'react-native-vector-icons/AntDesign';
@@ -15,8 +15,7 @@ export type Producto = {
   cantidad?: number;
 };
 
-type Cuenta = {
-  id: number;
+export type Cuenta = {
   productos: Producto[];
   fecha: Date;
 };
@@ -25,61 +24,61 @@ const productos = [
   {
     id: 1,
     nombre: 'Frape chico',
-    precio: 100,
+    precio: 15,
     imagen: 'https://picsum.photos/200/300',
   },
   {
     id: 2,
     nombre: 'Frape Grande',
-    precio: 200,
+    precio: 20,
     imagen: 'https://picsum.photos/200/300',
   },
   {
     id: 3,
     nombre: 'Frape Mediano',
-    precio: 300,
+    precio: 30,
     imagen: 'https://picsum.photos/200/300',
   },
   {
     id: 4,
     nombre: 'doritos queso',
-    precio: 400,
+    precio: 23,
     imagen: 'https://picsum.photos/200/300',
   },
   {
     id: 5,
     nombre: 'dortios chile ',
-    precio: 500,
+    precio: 12,
     imagen: 'https://picsum.photos/200/300',
   },
   {
     id: 6,
     nombre: 'papas queso',
-    precio: 600,
+    precio: 43,
     imagen: 'https://picsum.photos/200/300',
   },
   {
     id: 7,
     nombre: 'papas queso y chiles',
-    precio: 700,
+    precio: 12,
     imagen: 'https://picsum.photos/200/300',
   },
   {
     id: 8,
     nombre: 'cono nieve',
-    precio: 800,
+    precio: 16,
     imagen: 'https://picsum.photos/200/300',
   },
   {
     id: 9,
     nombre: 'canasta',
-    precio: 900,
+    precio: 20,
     imagen: 'https://picsum.photos/200/300',
   },
   {
     id: 10,
     nombre: 'litro de frape ',
-    precio: 1000,
+    precio: 32,
     imagen: 'https://picsum.photos/200/300',
   },
 ];
@@ -87,7 +86,6 @@ const productos = [
 export default function TabOneScreen() {
   const [cantidad, setCantidad] = useState(0); // [valor, funcion para actualizar el valor
   const [cuenta, setCuenta] = useState<Cuenta>({
-    id: 1,
     productos: [],
     fecha: new Date(),
   });
@@ -149,14 +147,10 @@ export default function TabOneScreen() {
               onPress={() => {
                 agregarAlCarrito(producto);
               }}
+              style={styles.productContainer}
             >
-              <View style={styles.productContainer}>
-                <Image style={styles.image} source={{ uri: producto.imagen }} />
-                <View style={styles.textContainer}>
-                  <Text style={styles.name}>{producto.nombre}</Text>
-                  <Text style={styles.price}>${producto.precio}</Text>
-                </View>
-              </View>
+              <Text style={styles.name}>{producto.nombre}</Text>
+              <Text style={styles.price}>${producto.precio}</Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -164,7 +158,18 @@ export default function TabOneScreen() {
       <TouchableOpacity
         style={styles.button}
         onPress={() => {
-          router.push({ pathname: '/cuenta', params: cuenta });
+          if (cuenta.productos.length === 0) {
+            alert('No hay productos en la cuenta');
+            return;
+          }
+          router.push({
+            pathname: 'cuentaScreen',
+            params: { cuenta, total: calcularTotal() },
+          });
+          setCuenta({
+            productos: [],
+            fecha: new Date(),
+          });
         }}
       >
         <Text style={{ color: '#ffffff', fontSize: 30 }}>
@@ -256,7 +261,7 @@ const styles = StyleSheet.create({
 
   textContainer: {
     elevation: 10,
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    backgroundColor: 'rgba(255, 255, 255, 1)',
     width: 180,
     height: 180,
     borderRadius: 20,
@@ -267,7 +272,8 @@ const styles = StyleSheet.create({
     allignItems: 'center',
   },
   price: {
-    fontSize: 14,
+    fontSize: 20,
+    fontWeight: 'bold',
   },
   name: {
     fontSize: 28,
@@ -275,10 +281,15 @@ const styles = StyleSheet.create({
     textAlign: 'left',
   },
   productContainer: {
-    marginVertical: 2,
-    marginBottom: 12,
+    marginVertical: 10,
+    borderRadius: 20,
+    elevation: 2
+    0,
+    backgroundColor: '#ffffff',
+
+    padding: 10,
     flexDirection: 'column',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     alignItems: 'center',
     width: 180,
     height: 180,
