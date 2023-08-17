@@ -4,12 +4,67 @@ import React from 'react';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRouter, useLocalSearchParams } from 'expo-router';
+import { AppState, Pedido, PedidosState, Producto } from './types';
+import { useDispatch, useSelector } from 'react-redux';
+import { removeAllProductos, addFecha } from './features/cuentaSlice';
+
+import { addPedido } from './features/pedidosSlice';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const storeData = async (newValue: any) => {
+  try {
+    const existingValue = await getData();
+    const combinedValue = [...(existingValue || []), newValue];
+    const jsonValue = JSON.stringify(combinedValue);
+    await AsyncStorage.setItem('pedidos', jsonValue);
+  } catch (e) {
+    // Manejar el error de guardado
+  }
+};
+
+const getData = async () => {
+  try {
+    const jsonValue = await AsyncStorage.getItem('pedidos');
+    return jsonValue != null ? JSON.parse(jsonValue) : null;
+  } catch (e) {
+    // error reading value
+  }
+};
 
 export default function CuentaScreen() {
+  const dispatch = useDispatch();
+  const cuenta = useSelector((state: AppState) => state.cuenta);
+  const fechaEnCuenta = useSelector((state: AppState) => state.cuenta.fecha);
+  const pedidos = useSelector((state: PedidosState) => state.pedidos);
+  const productosEnCuenta = useSelector(
+    (state: AppState) => state.cuenta.productos
+  );
+
+  const calcularId = () => {
+    let id = 0;
+    if (pedidos === undefined || pedidos === null) {
+      return 1;
+    }
+    const pedidosArray = Object.values(pedidos);
+    pedidosArray.forEach((pedido: Pedido) => {
+      if (pedido.id > id) {
+        id = pedido.id;
+      }
+    });
+
+    return id + 1;
+  };
+
+  const calcularTotal = () => {
+    let total = 0;
+    productosEnCuenta.forEach((producto: Producto) => {
+      total += producto.precio * producto.cantidad;
+    });
+    return total;
+  };
   const [cambio, setCambio] = React.useState(0);
-  const params = useLocalSearchParams();
-  const cuenta = params;
-  const total: number = Number(params.total);
+  const total = calcularTotal();
+
   const calcularCambio = (dineroRecibido: number) => {
     if (dineroRecibido < total) {
       setCambio(0);
@@ -45,7 +100,18 @@ export default function CuentaScreen() {
           alignItems: 'center',
           margin: 10,
         }}
-        onPress={() => {
+        onPress={async () => {
+          dispatch(addFecha(new Date().toLocaleString()));
+          const pedido: Pedido = {
+            id: calcularId(),
+            cuenta: cuenta,
+            total: total,
+          };
+          console.log(pedido);
+          await storeData(pedido);
+          await dispatch(addPedido(pedido));
+          await dispatch(removeAllProductos());
+
           router.back();
         }}
       >

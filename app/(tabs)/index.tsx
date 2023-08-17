@@ -1,141 +1,99 @@
 import { StyleSheet, Image, TouchableOpacity, Button } from 'react-native';
 import EditScreenInfo from '@/components/EditScreenInfo';
 import { Text, View } from '@/components/Themed';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import CuentaScreen from '../cuentaScreen';
 import { Link, router } from 'expo-router';
 import { ScrollView } from 'react-native-gesture-handler';
 import Icon from 'react-native-vector-icons/AntDesign';
-
-export type Producto = {
-  id: number;
-  nombre: string;
-  precio: number;
-  imagen: string;
-  cantidad?: number;
-};
-
-export type Cuenta = {
-  productos: Producto[];
-  fecha: Date;
-};
+import { Cuenta, Pedido, Producto } from '../types';
+import { store } from '../store';
+import { useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
+import { AppState } from '../types';
+import {
+  addProducto,
+  removeProducto,
+  removeAllProductos,
+  addFecha,
+} from '../features/cuentaSlice';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { addPedido } from '../features/pedidosSlice';
 
 const productos = [
   {
     id: 1,
     nombre: 'Frape chico',
     precio: 15,
-    imagen: 'https://picsum.photos/200/300',
   },
   {
     id: 2,
     nombre: 'Frape Grande',
     precio: 20,
-    imagen: 'https://picsum.photos/200/300',
   },
   {
     id: 3,
     nombre: 'Frape Mediano',
     precio: 30,
-    imagen: 'https://picsum.photos/200/300',
   },
   {
     id: 4,
     nombre: 'doritos queso',
     precio: 23,
-    imagen: 'https://picsum.photos/200/300',
   },
   {
     id: 5,
     nombre: 'dortios chile ',
     precio: 12,
-    imagen: 'https://picsum.photos/200/300',
   },
   {
     id: 6,
     nombre: 'papas queso',
     precio: 43,
-    imagen: 'https://picsum.photos/200/300',
   },
   {
     id: 7,
     nombre: 'papas queso y chiles',
     precio: 12,
-    imagen: 'https://picsum.photos/200/300',
   },
   {
     id: 8,
     nombre: 'cono nieve',
     precio: 16,
-    imagen: 'https://picsum.photos/200/300',
   },
   {
     id: 9,
     nombre: 'canasta',
     precio: 20,
-    imagen: 'https://picsum.photos/200/300',
   },
   {
     id: 10,
     nombre: 'litro de frape ',
     precio: 32,
-    imagen: 'https://picsum.photos/200/300',
   },
 ];
 
+const getData = async () => {
+  try {
+    const jsonValue = await AsyncStorage.getItem('pedidos');
+    return jsonValue != null ? JSON.parse(jsonValue) : null;
+  } catch (e) {}
+};
+
 export default function TabOneScreen() {
-  const [cantidad, setCantidad] = useState(0); // [valor, funcion para actualizar el valor
-  const [cuenta, setCuenta] = useState<Cuenta>({
-    productos: [],
-    fecha: new Date(),
-  });
+  // here we are going to synch pedidosreducer with asyncstorage
 
-  const agregarAlCarrito = (producto: Producto) => {
-    const index = cuenta.productos.findIndex((p) => p.id === producto.id);
-
-    if (index !== -1) {
-      const updatedProductos = [...cuenta.productos];
-      updatedProductos[index].cantidad =
-        (updatedProductos[index].cantidad || 1) + 1;
-      setCuenta((prevCuenta) => ({
-        ...prevCuenta,
-        productos: updatedProductos,
-      }));
-    } else {
-      setCuenta((prevCuenta) => ({
-        ...prevCuenta,
-        productos: [...prevCuenta.productos, { ...producto, cantidad: 1 }],
-      }));
-    }
-    setCantidad((prevCantidad) => prevCantidad + 1);
-  };
-
-  const quitarDelCarrito = (producto: Producto) => {
-    const index = cuenta.productos.findIndex((p) => p.id === producto.id);
-
-    if (index !== -1) {
-      const updatedProductos = [...cuenta.productos];
-      updatedProductos[index].cantidad =
-        (updatedProductos[index].cantidad || 1) - 1;
-
-      if (updatedProductos[index].cantidad! <= 0) {
-        updatedProductos.splice(index, 1);
-      }
-
-      setCuenta((prevCuenta) => ({
-        ...prevCuenta,
-        productos: updatedProductos,
-      }));
-    }
-
-    setCantidad((prevCantidad) => prevCantidad - 1);
-  };
+  const dispatch = useDispatch();
+  const productosEnCuenta = useSelector(
+    (state: AppState) => state.cuenta.productos
+  );
 
   const calcularTotal = () => {
-    return cuenta.productos.reduce(
-      (total, producto) => total + producto.precio * (producto.cantidad || 1),
-      0
-    );
+    let total = 0;
+    productosEnCuenta.forEach((producto: Producto) => {
+      total += producto.precio * producto.cantidad;
+    });
+    return total;
   };
   return (
     <View style={styles.container}>
@@ -145,7 +103,7 @@ export default function TabOneScreen() {
             <TouchableOpacity
               key={producto.id}
               onPress={() => {
-                agregarAlCarrito(producto);
+                dispatch(addProducto({ ...producto, cantidad: 1 }));
               }}
               style={styles.productContainer}
             >
@@ -158,18 +116,9 @@ export default function TabOneScreen() {
       <TouchableOpacity
         style={styles.button}
         onPress={() => {
-          if (cuenta.productos.length === 0) {
-            alert('No hay productos en la cuenta');
-            return;
+          if (productosEnCuenta.length > 0) {
+            router.push('/cuentaScreen');
           }
-          router.push({
-            pathname: 'cuentaScreen',
-            params: { cuenta, total: calcularTotal() },
-          });
-          setCuenta({
-            productos: [],
-            fecha: new Date(),
-          });
         }}
       >
         <Text style={{ color: '#ffffff', fontSize: 30 }}>
@@ -178,23 +127,29 @@ export default function TabOneScreen() {
       </TouchableOpacity>
 
       <ScrollView style={styles.ScrollCuenta}>
-        {cuenta.productos.map((producto) => (
-          <View style={styles.Cuenta} key={producto.id}>
-            <Text style={styles.textoCuenta}>{producto.nombre}</Text>
+        {productosEnCuenta ? (
+          productosEnCuenta.map((producto) => (
+            <View style={styles.Cuenta} key={producto.id}>
+              <Text style={styles.textoCuenta}>{producto.nombre}</Text>
 
-            <Text style={styles.cantidadCuenta}>{producto.cantidad}</Text>
+              <Text style={styles.cantidadCuenta}>{producto.cantidad}</Text>
 
-            <Icon
-              style={{ marginLeft: 20 }}
-              name="delete"
-              size={30}
-              color="#ed0909"
-              onPress={() => {
-                quitarDelCarrito(producto);
-              }}
-            />
-          </View>
-        ))}
+              <Icon
+                style={{ marginLeft: 20 }}
+                name="delete"
+                size={30}
+                color="#ed0909"
+                onPress={() => {
+                  dispatch(removeProducto(producto));
+                }}
+              />
+            </View>
+          ))
+        ) : (
+          <Text style={{ fontSize: 20, textAlign: 'center' }}>
+            No hay productos
+          </Text>
+        )}
       </ScrollView>
     </View>
   );
@@ -283,8 +238,7 @@ const styles = StyleSheet.create({
   productContainer: {
     marginVertical: 10,
     borderRadius: 20,
-    elevation: 2
-    0,
+    elevation: 2,
     backgroundColor: '#ffffff',
 
     padding: 10,

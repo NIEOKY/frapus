@@ -3,17 +3,41 @@ import { StyleSheet } from 'react-native';
 import EditScreenInfo from '@/components/EditScreenInfo';
 import { Text, View } from '@/components/Themed';
 
+import { ScrollView } from 'react-native-gesture-handler';
+import react from 'react';
+import { Cuenta, PedidosState, Producto } from '../types';
+import { useSelector } from 'react-redux';
+
 export default function TabTwoScreen() {
+  const pedidos = useSelector((state: PedidosState) => state.pedidos);
+
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Tab Two</Text>
-      <View style={styles.separator} lightColor="#eee" darkColor="rgba(255,255,255,0.1)" />
-      <EditScreenInfo path="app/(tabs)/two.tsx" />
+      <Text style={styles.title}>{pedidos.length}</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  pedido: {
+    backgroundColor: '#ffffff',
+    padding: 20,
+    marginVertical: 8,
+    marginHorizontal: 16,
+    borderRadius: 10,
+  },
+  pedidoFecha: {
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  pedidoTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  pedidoText: {
+    fontSize: 16,
+  },
+
   container: {
     flex: 1,
     alignItems: 'center',
