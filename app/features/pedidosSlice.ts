@@ -1,18 +1,9 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { Cuenta, Producto, PedidosState } from '../types';
+import { Cuenta, Producto } from '../types';
 import { Pedido } from '../types';
 
-const initialState: PedidosState = {
-  pedidos: [
-    {
-      id: 0,
-      cuenta: {
-        productos: [],
-        fecha: new Date().toLocaleDateString(),
-      },
-      total: 0,
-    },
-  ],
+const initialState: { pedidos: Pedido[] } = {
+  pedidos: [],
 };
 
 const pedidosSlice = createSlice({

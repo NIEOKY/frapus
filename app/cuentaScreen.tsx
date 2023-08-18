@@ -8,7 +8,7 @@ import { AppState, Pedido, PedidosState, Producto } from './types';
 import { useDispatch, useSelector } from 'react-redux';
 import { removeAllProductos, addFecha } from './features/cuentaSlice';
 
-import { addPedido } from './features/pedidosSlice';
+import pedidosSlice, { addPedido } from './features/pedidosSlice';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const storeData = async (newValue: any) => {
@@ -36,23 +36,12 @@ export default function CuentaScreen() {
   const cuenta = useSelector((state: AppState) => state.cuenta);
   const fechaEnCuenta = useSelector((state: AppState) => state.cuenta.fecha);
   const pedidos = useSelector((state: PedidosState) => state.pedidos);
+
   const productosEnCuenta = useSelector(
     (state: AppState) => state.cuenta.productos
   );
-
   const calcularId = () => {
-    let id = 0;
-    if (pedidos === undefined || pedidos === null) {
-      return 1;
-    }
-    const pedidosArray = Object.values(pedidos);
-    pedidosArray.forEach((pedido: Pedido) => {
-      if (pedido.id > id) {
-        id = pedido.id;
-      }
-    });
-
-    return id + 1;
+    return 0;
   };
 
   const calcularTotal = () => {
@@ -103,12 +92,12 @@ export default function CuentaScreen() {
         onPress={async () => {
           dispatch(addFecha(new Date().toLocaleString()));
           const pedido: Pedido = {
-            id: calcularId(),
+            id: await calcularId(),
             cuenta: cuenta,
             total: total,
           };
           console.log(pedido);
-          await storeData(pedido);
+          //await storeData(pedido);
           await dispatch(addPedido(pedido));
           await dispatch(removeAllProductos());
 
