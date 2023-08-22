@@ -11,7 +11,7 @@ import { removeAllProductos, addFecha } from './features/cuentaSlice';
 import pedidosSlice, { addPedido } from './features/pedidosSlice';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const storeData = async (newValue: any) => {
+const storeData = async (newValue: Pedido) => {
   try {
     const existingValue = await getData();
     const combinedValue = [...(existingValue || []), newValue];
@@ -34,15 +34,10 @@ const getData = async () => {
 export default function CuentaScreen() {
   const dispatch = useDispatch();
   const cuenta = useSelector((state: AppState) => state.cuenta);
-  const fechaEnCuenta = useSelector((state: AppState) => state.cuenta.fecha);
-  const pedidos = useSelector((state: PedidosState) => state.pedidos);
 
   const productosEnCuenta = useSelector(
     (state: AppState) => state.cuenta.productos
   );
-  const calcularId = () => {
-    return 0;
-  };
 
   const calcularTotal = () => {
     let total = 0;
@@ -65,6 +60,12 @@ export default function CuentaScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, alignItems: 'center', padding: 20 }}>
+      <Text style={{ fontSize: 30, textAlign: 'center', marginBottom: 10 }}>
+        Total
+      </Text>
+      <View style={styles.TextoDineroContainer}>
+        <Text style={styles.TextoDinero}>${total}</Text>
+      </View>
       <View style={styles.TextoDineroContainer}>
         <TextInput
           style={styles.TextoDinero}
@@ -83,28 +84,31 @@ export default function CuentaScreen() {
         style={{
           width: '100%',
           height: 80,
-          backgroundColor: '#ffffff',
+          backgroundColor: '#4CD442',
           borderRadius: 10,
           justifyContent: 'center',
           alignItems: 'center',
           margin: 10,
         }}
         onPress={async () => {
-          dispatch(addFecha(new Date().toLocaleString()));
+          if (cambio <= 0) {
+            return;
+          }
+          const now = new Date();
+          const formattedDate = `${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;
+          await dispatch(addFecha(formattedDate));
           const pedido: Pedido = {
-            id: await calcularId(),
             cuenta: cuenta,
             total: total,
           };
-          console.log(pedido);
-          //await storeData(pedido);
+          await storeData(pedido);
           await dispatch(addPedido(pedido));
           await dispatch(removeAllProductos());
 
           router.back();
         }}
       >
-        <Text style={{ color: '#000000', fontSize: 30 }}>Pagar</Text>
+        <Text style={{ color: '#ffffff', fontSize: 30 }}>Pagar</Text>
       </TouchableOpacity>
     </SafeAreaView>
   );

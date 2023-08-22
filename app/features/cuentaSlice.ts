@@ -3,7 +3,7 @@ import { Cuenta, Producto } from '../types'; // Asegúrate de importar los tipos
 
 const initialState: Cuenta = {
   productos: [],
-  fecha: new Date().toISOString(),
+  fecha: new Date().toLocaleString(),
 };
 
 const cuentaSlice = createSlice({
@@ -12,7 +12,7 @@ const cuentaSlice = createSlice({
   reducers: {
     addProducto(state, action: PayloadAction<Producto>) {
       const existingProduct = state.productos.find(
-        (producto) => producto.id === action.payload.id
+        (producto) => producto.nombre === action.payload.nombre
       );
 
       if (existingProduct) {
@@ -26,14 +26,14 @@ const cuentaSlice = createSlice({
     },
     removeProducto(state, action: PayloadAction<Producto>) {
       const existingProduct = state.productos.find(
-        (producto) => producto.id === action.payload.id
+        (producto) => producto.nombre === action.payload.nombre
       );
 
       if (existingProduct) {
         existingProduct.cantidad = Math.max(existingProduct.cantidad - 1, 0);
         if (existingProduct.cantidad === 0) {
           state.productos = state.productos.filter(
-            (producto) => producto.id !== action.payload.id
+            (producto) => producto.nombre !== action.payload.nombre
           );
         }
       }

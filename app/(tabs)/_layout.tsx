@@ -28,6 +28,7 @@ export default function TabLayout() {
         name="index"
         options={{
           title: 'Productos',
+          headerShown: false,
 
           tabBarIcon: ({ color }) => (
             <Icon name="ice-cream" size={25} color={color} />
@@ -37,8 +38,10 @@ export default function TabLayout() {
       <Tabs.Screen
         name="two"
         options={{
-          title: 'Tab Two',
-          tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
+          title: 'Ventas',
+          tabBarIcon: ({ color }) => (
+            <TabBarIcon name="leanpub" color={color} />
+          ),
         }}
       />
     </Tabs>

@@ -1,8 +1,16 @@
 export interface Producto {
-  id: number;
   nombre: string;
   precio: number;
   cantidad: number;
+}
+
+export interface ProductoVenta {
+  nombre: string;
+  precio: number;
+}
+
+export interface ProductoVentaState {
+  productos: ProductoVenta[];
 }
 
 export interface Cuenta {
@@ -18,17 +26,10 @@ export interface AppState {
 }
 
 export interface PedidosState {
-  pedidos: [
-    {
-      id: number;
-      cuenta: Cuenta;
-      total: number;
-    }
-  ];
+  pedidos: Pedido[];
 }
 
 export interface Pedido {
-  id: number;
   cuenta: Cuenta;
   total: number;
 }

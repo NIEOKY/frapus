@@ -6,11 +6,19 @@ import CuentaScreen from '../cuentaScreen';
 import { Link, router } from 'expo-router';
 import { ScrollView } from 'react-native-gesture-handler';
 import Icon from 'react-native-vector-icons/AntDesign';
-import { Cuenta, Pedido, Producto } from '../types';
+import {
+  Cuenta,
+  Pedido,
+  Producto,
+  ProductoVenta,
+  ProductoVentaState,
+} from '../types';
 import { store } from '../store';
 import { useSelector } from 'react-redux';
 import { useDispatch } from 'react-redux';
 import { AppState } from '../types';
+import Dialog from 'react-native-dialog';
+import AddProductDialog from '@/components/AddProductDialog';
 import {
   addProducto,
   removeProducto,
@@ -18,7 +26,8 @@ import {
   addFecha,
 } from '../features/cuentaSlice';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { addPedido } from '../features/pedidosSlice';
+import { addPedido, removeAllPedidos } from '../features/pedidosSlice';
+import { addProductoVenta } from '../features/productosSlice';
 
 const productos = [
   {
@@ -79,9 +88,45 @@ const getData = async () => {
     return jsonValue != null ? JSON.parse(jsonValue) : null;
   } catch (e) {}
 };
+const getDataProductos = async () => {
+  try {
+    const jsonValue = await AsyncStorage.getItem('productos');
+    return jsonValue != null ? JSON.parse(jsonValue) : null;
+  } catch (e) {}
+};
+
+const cleanData = async () => {
+  try {
+    await AsyncStorage.removeItem('pedidos');
+  } catch (e) {}
+};
+//list 0f 10 random colors
 
 export default function TabOneScreen() {
   // here we are going to synch pedidosreducer with asyncstorage
+  const [pedidos, setPedidos] = useState<Pedido[]>([]);
+  const productos = useSelector((state: ProductoVentaState) => state.productos);
+
+  useEffect(() => {
+    getData().then((data) => {
+      if (data) {
+        setPedidos(data);
+
+        data.forEach((pedido: Pedido) => {
+          store.dispatch(addPedido(pedido));
+        });
+      }
+    });
+  }, []);
+  useEffect(() => {
+    getDataProductos().then((data) => {
+      if (data) {
+        data.forEach((producto: ProductoVenta) => {
+          store.dispatch(addProductoVenta(producto));
+        });
+      }
+    });
+  }, []);
 
   const dispatch = useDispatch();
   const productosEnCuenta = useSelector(
@@ -97,15 +142,15 @@ export default function TabOneScreen() {
   };
   return (
     <View style={styles.container}>
-      <ScrollView>
+      <ScrollView style={{ width: '100%', zIndex: 0 }}>
         <View style={styles.grid}>
           {productos.map((producto) => (
             <TouchableOpacity
-              key={producto.id}
+              key={producto.nombre}
               onPress={() => {
                 dispatch(addProducto({ ...producto, cantidad: 1 }));
               }}
-              style={styles.productContainer}
+              style={[styles.productContainer, ,]}
             >
               <Text style={styles.name}>{producto.nombre}</Text>
               <Text style={styles.price}>${producto.precio}</Text>
@@ -113,6 +158,7 @@ export default function TabOneScreen() {
           ))}
         </View>
       </ScrollView>
+      <AddProductDialog />
       <TouchableOpacity
         style={styles.button}
         onPress={() => {
@@ -129,7 +175,7 @@ export default function TabOneScreen() {
       <ScrollView style={styles.ScrollCuenta}>
         {productosEnCuenta ? (
           productosEnCuenta.map((producto) => (
-            <View style={styles.Cuenta} key={producto.id}>
+            <View style={styles.Cuenta} key={producto.nombre}>
               <Text style={styles.textoCuenta}>{producto.nombre}</Text>
 
               <Text style={styles.cantidadCuenta}>{producto.cantidad}</Text>
@@ -250,11 +296,12 @@ const styles = StyleSheet.create({
   },
 
   container: {
+    paddingTop: 60,
     flex: 1,
     flexDirection: 'column',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: 'rgba(250,250,250,1)',
   },
   title: {
     fontSize: 20,
@@ -267,5 +314,6 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'space-around',
     paddingTop: 20,
+    backgroundColor: 'rgba(250,250,250,1)',
   },
 });
