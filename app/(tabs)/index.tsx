@@ -27,7 +27,10 @@ import {
 } from '../features/cuentaSlice';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { addPedido, removeAllPedidos } from '../features/pedidosSlice';
-import { addProductoVenta } from '../features/productosSlice';
+import {
+  addProductoVenta,
+  removeProductoVenta,
+} from '../features/productosSlice';
 
 const productos = [
   {
@@ -100,12 +103,43 @@ const cleanData = async () => {
     await AsyncStorage.removeItem('pedidos');
   } catch (e) {}
 };
+
 //list 0f 10 random colors
 
 export default function TabOneScreen() {
+  const [visible, setVisible] = useState(false);
   // here we are going to synch pedidosreducer with asyncstorage
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const productos = useSelector((state: ProductoVentaState) => state.productos);
+
+  const showDialog = () => {
+    setVisible(true);
+  };
+
+  const handleCancel = () => {
+    setVisible(false);
+  };
+
+  const handleDelete = async (producto: ProductoVenta) => {
+    await deleteProducto(producto);
+    setVisible(false);
+  };
+
+  const deleteProducto = async (producto: ProductoVenta) => {
+    try {
+      const existingValue = await getDataProductos();
+      const combinedValue = existingValue.filter(
+        (p: Producto) => p.nombre !== producto.nombre
+      );
+      const jsonValue = JSON.stringify(combinedValue);
+
+      await AsyncStorage.setItem('productos', jsonValue);
+
+      await dispatch(removeProductoVenta(producto));
+    } catch (e) {
+      console.log(e);
+    }
+  };
 
   useEffect(() => {
     getData().then((data) => {
@@ -152,6 +186,28 @@ export default function TabOneScreen() {
               }}
               style={[styles.productContainer, ,]}
             >
+              <TouchableOpacity
+                onPress={showDialog}
+                style={{ position: 'absolute', right: 10, top: 10 }}
+              >
+                <Dialog.Container visible={visible}>
+                  <Dialog.Title>
+                    Seguro que quieres eliminar este producto?
+                  </Dialog.Title>
+                  <Dialog.Button label="Cancelar" onPress={handleCancel} />
+                  <Dialog.Button
+                    label="Eliminar"
+                    onPress={() => handleDelete(producto)}
+                  />
+                </Dialog.Container>
+                <Icon
+                  style={{ marginLeft: 20 }}
+                  name="delete"
+                  size={25}
+                  color="#ed0909"
+                />
+              </TouchableOpacity>
+
               <Text style={styles.name}>{producto.nombre}</Text>
               <Text style={styles.price}>${producto.precio}</Text>
             </TouchableOpacity>

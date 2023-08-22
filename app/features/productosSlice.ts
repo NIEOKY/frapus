@@ -15,13 +15,14 @@ const productosSlice = createSlice({
       }
     },
     removeProductoVenta(state, action: PayloadAction<ProductoVenta>) {
-      state = state.filter(
-        (producto) => producto.nombre !== action.payload.nombre
+      const index = state.findIndex(
+        (producto) => producto.nombre === action.payload.nombre
       );
+      state.splice(index, 1);
     },
   },
 });
 
-export const { addProductoVenta } = productosSlice.actions;
+export const { addProductoVenta, removeProductoVenta } = productosSlice.actions;
 
 export default productosSlice.reducer;

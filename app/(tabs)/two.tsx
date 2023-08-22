@@ -37,7 +37,21 @@ export default function TabTwoScreen() {
                     : setExpandedFecha(fecha)
                 }
               >
-                <Text style={styles.fechaHeaderText}>{fecha}</Text>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                  }}
+                >
+                  <Text style={styles.fechaHeaderText}>{fecha}</Text>
+                  <Text style={styles.fechaHeaderText}>
+                    Total: $
+                    {pedidosPorFecha.reduce(
+                      (total, pedido) => total + pedido.total,
+                      0
+                    )}
+                  </Text>
+                </View>
               </TouchableOpacity>
               {expandedFecha === fecha &&
                 pedidosPorFecha.map((pedido: Pedido, index: number) => (

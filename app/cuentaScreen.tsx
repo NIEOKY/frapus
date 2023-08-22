@@ -32,6 +32,7 @@ const getData = async () => {
 };
 
 export default function CuentaScreen() {
+  const [puedePagar, setPuedePagar] = React.useState(false);
   const dispatch = useDispatch();
   const cuenta = useSelector((state: AppState) => state.cuenta);
 
@@ -50,10 +51,12 @@ export default function CuentaScreen() {
   const total = calcularTotal();
 
   const calcularCambio = (dineroRecibido: number) => {
-    if (dineroRecibido < total) {
+    if (dineroRecibido - total < 0) {
+      setPuedePagar(false);
       setCambio(0);
       return;
     }
+    setPuedePagar(true);
     const cambio = dineroRecibido - total;
     setCambio(cambio);
   };
@@ -91,7 +94,7 @@ export default function CuentaScreen() {
           margin: 10,
         }}
         onPress={async () => {
-          if (cambio <= 0) {
+          if (!puedePagar) {
             return;
           }
           const now = new Date();
