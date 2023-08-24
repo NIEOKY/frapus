@@ -18,6 +18,26 @@ export default function TabTwoScreen() {
     }
     groupedPedidos[fecha].push(pedido);
   });
+  //ahora toca separar cuantos de cada tipo de producto se vendieron en cada fecha y el total de dinero que se obtuvo en cada fecha por producto
+  const cantidadProductoFecha: Record<string, Record<string, number>> = {};
+  const totalProductoFecha: Record<string, Record<string, number>> = {};
+  Object.entries(groupedPedidos).forEach(([fecha, pedidosPorFecha]) => {
+    cantidadProductoFecha[fecha] = {};
+    totalProductoFecha[fecha] = {};
+    pedidosPorFecha.forEach((pedido: Pedido) => {
+      pedido.cuenta.productos.forEach((producto: Producto) => {
+        if (!cantidadProductoFecha[fecha][producto.nombre]) {
+          cantidadProductoFecha[fecha][producto.nombre] = 0;
+        }
+        cantidadProductoFecha[fecha][producto.nombre] += producto.cantidad;
+        if (!totalProductoFecha[fecha][producto.nombre]) {
+          totalProductoFecha[fecha][producto.nombre] = 0;
+        }
+        totalProductoFecha[fecha][producto.nombre] +=
+          producto.cantidad * producto.precio;
+      });
+    });
+  });
 
   const [expandedFecha, setExpandedFecha] = useState<string | null>(null);
   const [expandedPedido, setExpandedPedido] = useState<number | null>(null);
@@ -53,6 +73,23 @@ export default function TabTwoScreen() {
                   </Text>
                 </View>
               </TouchableOpacity>
+              <View style={{ width: '100%', marginBottom: 10 }}>
+                {expandedFecha === fecha &&
+                  Object.entries(cantidadProductoFecha[fecha]).map(
+                    ([nombre, cantidad], index) => (
+                      <View style={styles.totalContainer} key={index}>
+                        <Text style={styles.totalText}>{nombre}</Text>
+                        <Text style={styles.infoText}>
+                          Cantidad: {cantidad}
+                        </Text>
+                        <Text style={styles.infoText}>
+                          Total: ${totalProductoFecha[fecha][nombre]}
+                        </Text>
+                        <View style={styles.separator} />
+                      </View>
+                    )
+                  )}
+              </View>
               {expandedFecha === fecha &&
                 pedidosPorFecha.map((pedido: Pedido, index: number) => (
                   <TouchableOpacity
@@ -76,7 +113,15 @@ export default function TabTwoScreen() {
                     {expandedPedido === index && (
                       <View style={styles.productosContainer}>
                         {pedido.cuenta.productos.map((producto: Producto) => (
-                          <View key={Math.random()}>
+                          <View
+                            key={Math.random()}
+                            style={{
+                              margin: 5,
+                              flex: 1,
+                              flexDirection: 'row',
+                              justifyContent: 'space-between',
+                            }}
+                          >
                             <Text style={styles.pedidoTitle}>
                               {producto.nombre}
                             </Text>
@@ -151,5 +196,27 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: 'bold',
+  },
+  totalContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginHorizontal: 16,
+    padding: 10,
+    backgroundColor: 'rgba(250,250,250,1)',
+    borderWidth: 1,
+    borderBottomColor: '#000',
+  },
+  totalText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    width: '20%',
+  },
+  infoText: {
+    fontSize: 16,
+  },
+  separator: {
+    marginVertical: 8,
+    borderBottomColor: '#737373',
+    borderBottomWidth: StyleSheet.hairlineWidth,
   },
 });
