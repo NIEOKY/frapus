@@ -87,8 +87,9 @@ const styles = StyleSheet.create({
     borderRadius: 40,
     marginRight: 10,
     position: 'absolute',
-    bottom: '96%',
-    right: '44%',
+    //center aligns horizontally
+    alignItems: 'center',
+    marginTop: 30,
   },
 
   customButton: {
